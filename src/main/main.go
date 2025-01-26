@@ -5,8 +5,8 @@ import (
 	"os"
 	"regexp"
 
-	stringanalyzer "github.com/Nikitarsis/go_string_analyzer"
 	args "github.com/Nikitarsis/golang_args"
+	stringanalyzer "github.com/Nikitarsis/string_analyzer"
 )
 
 //CLASS := regexp.MustCompile(`[ѢѣІіѲѳѴѵ]|([ВКСфкцнгшщзхфвпрлджчсмтб]ъ[ ,.;:?!\-"'])`)
