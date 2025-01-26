@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	args "github.com/Nikitarsis/golang_args"
 	stringanalyzer "github.com/Nikitarsis/string_analyzer"
@@ -44,6 +45,7 @@ func getStringAnalyzer(saveStr bool, countComb bool) *stringanalyzer.StringAnaly
 	if saveStr {
 		builder.SaveOriginalString()
 	}
+	builder.AddChecker("isYoficated", func(s *string) bool { return strings.ContainsAny(*s, "ёЁ") })
 	builder.AddChecker("isClassical", func(s *string) bool { return CLASS.MatchString(*s) })
 	builder.AddChecker("isReformed", func(s *string) bool { return REFORM.MatchString(*s) })
 	builder.AddChecker("isTrash", func(s *string) bool { return TRASH.MatchString(*s) })

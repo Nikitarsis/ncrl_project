@@ -1,4 +1,4 @@
-module prereformedcounter
+module github.com/Nikitarsis/ncrl_project
 
 go 1.22.2
 
