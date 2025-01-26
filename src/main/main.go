@@ -1,11 +1,12 @@
 package main
 
 import (
-	"args/args"
 	"fmt"
 	"os"
 	"regexp"
-	"stringanalyzer/stringanalyzer"
+
+	stringanalyzer "github.com/Nikitarsis/go_string_analyzer"
+	args "github.com/Nikitarsis/golang_args"
 )
 
 //CLASS := regexp.MustCompile(`[ѢѣІіѲѳѴѵ]|([ВКСфкцнгшщзхфвпрлджчсмтб]ъ[ ,.;:?!\-"'])`)
