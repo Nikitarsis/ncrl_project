@@ -2,35 +2,50 @@ package main
 
 import "strconv"
 
+type FLAGS string
+
+const (
+	SAVE_STRING FLAGS = "should_save_string"
+	COMBO       FLAGS = "should_save_combo"
+	NO_INPUT    FLAGS = "stop_input_pipeline"
+	NO_OUTPUT   FLAGS = "stop_output_pipeline"
+	LOG_TRASH   FLAGS = "log_unnecessary_information"
+)
+
 type Config struct {
-	shouldSaveString   bool
-	shouldCountCombo   bool
-	stopInputPipeline  bool
-	stopOutputPipeline bool
-	readingFiles       []string
-	outputFiles        []string
-	sizeOfChan         int
-	numOfGoroutines    int
+	flags           map[FLAGS]bool
+	readingFiles    []string
+	outputFiles     []string
+	sizeOfChan      int
+	numOfGoroutines int
 }
 
 func GetConfig() Config {
-	return Config{false, false, false, false, make([]string, 0), make([]string, 0), 10000, 12}
+	return Config{
+		map[FLAGS]bool{
+			SAVE_STRING: false,
+			COMBO:       false,
+			NO_INPUT:    false,
+			NO_OUTPUT:   false,
+			LOG_TRASH:   false,
+		},
+		make([]string, 0),
+		make([]string, 0),
+		10000,
+		12,
+	}
 }
 
-func (c *Config) SaveString() {
-	c.shouldSaveString = true
+func (c *Config) flagUp(flag FLAGS) {
+	c.flags[flag] = true
 }
 
-func (c *Config) CountCombo() {
-	c.shouldCountCombo = true
+func (c *Config) flagDown(flag FLAGS) {
+	c.flags[flag] = false
 }
 
-func (c *Config) TurnOffOutputPipeline() {
-	c.stopOutputPipeline = true
-}
-
-func (c *Config) TurnOffInputPipeline() {
-	c.stopInputPipeline = true
+func (c Config) checkFlag(flag FLAGS) bool {
+	return c.flags[flag]
 }
 
 func (c *Config) SetReadingFiles(s ...string) {
@@ -39,22 +54,6 @@ func (c *Config) SetReadingFiles(s ...string) {
 
 func (c *Config) SetOutputFiles(s ...string) {
 	c.outputFiles = s
-}
-
-func (c Config) ShouldSaveString() bool {
-	return c.shouldSaveString
-}
-
-func (c Config) ShouldCountCombo() bool {
-	return c.shouldCountCombo
-}
-
-func (c Config) ShouldStopInPipeline() bool {
-	return c.stopInputPipeline
-}
-
-func (c Config) ShouldStopOutPipeline() bool {
-	return c.stopOutputPipeline
 }
 
 func (c *Config) SetSizeOfChan(s ...string) {
