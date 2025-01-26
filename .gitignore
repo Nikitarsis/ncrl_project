@@ -2,3 +2,4 @@ data/
 .vscode/
 bin/
 pkg/
+src/main/go.sum
