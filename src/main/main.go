@@ -1,11 +1,11 @@
 package main
 
 import (
-	"args"
+	"args/args"
 	"fmt"
 	"os"
 	"regexp"
-	"stringanalyzer"
+	"stringanalyzer/stringanalyzer"
 )
 
 //CLASS := regexp.MustCompile(`[ѢѣІіѲѳѴѵ]|([ВКСфкцнгшщзхфвпрлджчсмтб]ъ[ ,.;:?!\-"'])`)
@@ -15,7 +15,7 @@ import (
 var configSingleton Config
 
 func getParser() *args.ArgsParser {
-	builder := args.NewParserBuilder()
+	builder := args.InitParserBuilder()
 	builder.AddElementAtLeast(func(s ...string) { configSingleton.SetReadingFiles(s...) }, 1, "inputFile", false, "i")
 	builder.AddElementAtLeast(func(s ...string) { configSingleton.SetOutputFiles(s...) }, 1, "outputFile", false, "o")
 	builder.AddElementAtMost(func(s ...string) { configSingleton.SaveString() }, 0, "saveStrings", false, "s")
@@ -64,25 +64,25 @@ func main() {
 	}
 	size := configSingleton.GetSizeOfChan()
 	numGo := configSingleton.GetNumOfGoroutines()
-	stringStream := make(chan *string, size)
-	byteStream := make(chan *[]byte, size)
+	inputStream := make(chan *string, size)
+	outputStream := make(chan *string, size)
 	go CyclicReading(
 		!configSingleton.ShouldStopInPipeline(),
-		stringStream, func(s string) {},
+		inputStream, func(s string) {},
 		func(s string) {},
 		configSingleton.GetReadingFiles()...,
 	)
 	for i := 0; i < numGo; i++ {
 		go loopRoutine(
-			byteStream,
-			stringStream,
+			outputStream,
+			inputStream,
 			func(s string) {},
 			analyzeFunc,
 		)
 	}
 	go CyclicWriting(
 		!configSingleton.ShouldStopOutPipeline(),
-		byteStream,
+		outputStream,
 		func(s string) {},
 		func(s string) {},
 		configSingleton.GetOutputFiles()...,

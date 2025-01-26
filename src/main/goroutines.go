@@ -59,7 +59,7 @@ func CyclicReading(
 
 func CyclicWriting(
 	writeToPipeline bool,
-	out <-chan *[]byte,
+	out <-chan *string,
 	warn func(s string),
 	log func(s string),
 	fileNames ...string,
@@ -81,7 +81,7 @@ func CyclicWriting(
 	for {
 		line := <-out
 		for _, writer := range writers {
-			nn, err := writer.Write(*line)
+			nn, err := writer.WriteString(*line)
 			if err != nil {
 				warn(err.Error())
 				continue
@@ -95,14 +95,15 @@ func CyclicWriting(
 	}
 }
 
-func loopRoutine(out chan<- *[]byte, in <-chan *string, warn func(string), function func(*string) (*[]byte, bool)) {
+func loopRoutine(out chan<- *string, in <-chan *string, warn func(string), function func(*string) (*[]byte, bool)) {
 	for {
 		str := <-in
-		ret, check := function(str)
+		st, check := function(str)
 		if !check {
 			warn("String wasn't processed")
 			continue
 		}
-		out <- ret
+		ret := string(*st)
+		out <- &ret
 	}
 }
