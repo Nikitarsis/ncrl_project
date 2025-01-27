@@ -40,10 +40,6 @@ func (c *Config) flagUp(flag FLAGS) {
 	c.flags[flag] = true
 }
 
-func (c *Config) flagDown(flag FLAGS) {
-	c.flags[flag] = false
-}
-
 func (c Config) checkFlag(flag FLAGS) bool {
 	return c.flags[flag]
 }
