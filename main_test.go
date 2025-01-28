@@ -165,11 +165,6 @@ func TestCyclicWriting(t *testing.T) {
 }
 
 func TestBasicFunction(t *testing.T) {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Recovered: %v\n", r)
-		}
-	}()
 	args := strings.Split("--output_file data/parsed --input_file data/test -tmsI", " ")
 	basicFunction(args)
 }
