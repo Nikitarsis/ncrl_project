@@ -6,6 +6,35 @@ import (
 	"testing"
 )
 
+func loopTest(analyzeFunc func(*string) (*[]byte, bool), strs []string) {
+	stringChan := make(chan *string, 10)
+	byteChan := make(chan *[]byte, 10)
+	go func() {
+		for _, str := range strs {
+			stringChan <- &str
+		}
+		close(stringChan)
+	}()
+	go loopRoutine(
+		byteChan,
+		stringChan,
+		func(s string) {},
+		func(s string) {},
+		func() bool { return false },
+		func() {},
+		analyzeFunc,
+	)
+	i := 0
+	for {
+		i++
+		out, opened := <-byteChan
+		if !opened {
+			return
+		}
+		fmt.Printf("%d:%s\n", i, string(*out))
+	}
+}
+
 func TestCyclicReading(t *testing.T) {
 	stringChan := make(chan *string, 1000)
 	fmt.Println("STARTED READING")
@@ -33,8 +62,6 @@ func TestCyclicReading(t *testing.T) {
 }
 
 func TestLoop(t *testing.T) {
-	stringChan := make(chan *string, 10)
-	byteChan := make(chan *[]byte, 10)
 	strs := []string{
 		"Мы всѣ учились понемногу,",
 		"Чему нибудь и какъ нибудь:",
@@ -55,29 +82,86 @@ func TestLoop(t *testing.T) {
 		ret := []byte(*s)
 		return &ret, true
 	}
+	loopTest(analyzeFunc, strs)
+}
+
+func TestLoopRealAnalyze(t *testing.T) {
+	strs := []string{
+		"Мы всѣ учились понемногу,",
+		"Чему нибудь и какъ нибудь:",
+		"Такъ воспитаньемъ, слава Богу,",
+		"У насъ немудрено блеснуть.",
+		"Онѣгинъ былъ, по мнѣнью многихъ",
+		"(Судей рѣшительныхъ и строгихъ),",
+		"Ученый малый, но педантъ.",
+		"Имѣлъ онъ счастливый талантъ",
+		"Безъ принужденья въ разговорѣ",
+		"Коснуться до всего слегка,",
+		"Съ ученымъ видомъ знатока",
+		"Хранить молчанье въ важномъ спорѣ,",
+		"И возбуждать улыбку дамъ",
+		"Огнемъ нежданыхъ эпиграммъ",
+	}
+	reformed := []string{
+		"Любить иных — тяжелый крест,",
+		"А ты прекрасна без извилин,",
+		"И прелести твоей секрет",
+		"Разгадке жизни равносилен.",
+		"Весною слышен шорох снов",
+		"И шелест новостей и истин.",
+		"Ты из семьи таких основ.",
+		"Твой смысл, как воздух, бескорыстен.",
+		"Легко проснуться и прозреть,",
+		"Словесный сор из сердца вытрясть",
+		"И жить, не засоряясь впредь,",
+		"Все это — небольшая хитрость.",
+	}
+	analyzer := getStringAnalyzer(true, true)
+	analyzeFunc := func(s *string) (*[]byte, bool) {
+		ret, err := analyzer.AnalyzeString(s).GetJson()
+		if err != nil {
+			t.Error(err)
+			return nil, false
+		}
+		return ret, true
+	}
+	loopTest(analyzeFunc, strs)
+	fmt.Printf("\n\n%s\n\n", "REFORMED")
+	loopTest(analyzeFunc, reformed)
+}
+
+func TestCyclicWriting(t *testing.T) {
+	strs := []string{
+		"Мы всѣ учились понемногу,",
+		"Чему нибудь и какъ нибудь:",
+		"Такъ воспитаньемъ, слава Богу,",
+		"У насъ немудрено блеснуть.",
+		"Онѣгинъ былъ, по мнѣнью многихъ",
+		"(Судей рѣшительныхъ и строгихъ),",
+		"Ученый малый, но педантъ.",
+		"Имѣлъ онъ счастливый талантъ",
+		"Безъ принужденья въ разговорѣ",
+		"Коснуться до всего слегка,",
+		"Съ ученымъ видомъ знатока",
+		"Хранить молчанье въ важномъ спорѣ,",
+		"И возбуждать улыбку дамъ",
+		"Огнемъ нежданыхъ эпиграммъ",
+	}
+	byteChan := make(chan *[]byte, 10)
 	go func() {
 		for _, str := range strs {
-			stringChan <- &str
+			bytes := []byte(str)
+			byteChan <- &bytes
 		}
-		close(stringChan)
+		close(byteChan)
 	}()
-	go loopRoutine(
+	CyclicWriting(
+		true,
 		byteChan,
-		stringChan,
 		func(s string) {},
 		func(s string) {},
 		func() bool { return false },
-		func() {},
-		analyzeFunc,
 	)
-	for {
-		out, opened := <-byteChan
-		if !opened {
-			return
-		}
-		fmt.Print(*out)
-		fmt.Println()
-	}
 }
 
 func TestBasicFunction(t *testing.T) {
