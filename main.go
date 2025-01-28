@@ -37,7 +37,7 @@ func getParser() *args.ArgsParser {
 func getStringAnalyzer(saveStr bool, countComb bool) *stringanalyzer.StringAnalyzer {
 	CLASS := regexp.MustCompile(`[ѢѣІіѲѳѴѵ]|([ВКСфкцнгшщзхфвпрлджчсмтб]ъ[ ,.;:?!\-"'])`)
 	REFORM := regexp.MustCompile(`([иИ][яеёоыеиюэ])|([ВКСфкцнгшщзхфвпрлджчсмтб][ ,.;:?!\-"'])`)
-	TRASH := regexp.MustCompile(`.{,5}`)
+	//TRASH := regexp.MustCompile(`.{1,5}`)
 
 	builder := stringanalyzer.CreateSABuilder()
 	if countComb {
@@ -49,7 +49,7 @@ func getStringAnalyzer(saveStr bool, countComb bool) *stringanalyzer.StringAnaly
 	builder.AddChecker("isYoficated", func(s *string) bool { return strings.ContainsAny(*s, "ёЁ") })
 	builder.AddChecker("isClassical", func(s *string) bool { return CLASS.MatchString(*s) })
 	builder.AddChecker("isReformed", func(s *string) bool { return REFORM.MatchString(*s) })
-	builder.AddChecker("isTrash", func(s *string) bool { return TRASH.MatchString(*s) })
+	builder.AddChecker("isTrash", func(s *string) bool { return len(*s) <= 5 })
 	return builder.Construct()
 }
 
@@ -82,6 +82,11 @@ func basicFunction(args []string) {
 	stringChan := make(chan *string, size)        //input chan
 	byteChan := make(chan *[]byte, size)          //output chan
 
+	finishRoutines := make([]bool, numGo)
+	for i := 0; i < numGo; i++ {
+		finishRoutines[i] = true
+	}
+
 	//Launch reading
 	go CyclicReading(
 		!configSingleton.checkFlag(NO_INPUT),
@@ -92,7 +97,7 @@ func basicFunction(args []string) {
 		configSingleton.GetReadingFiles()...,
 	)
 	//loop function
-	loop := func() {
+	loop := func(i int) {
 		loopRoutine(
 			byteChan,
 			stringChan,
@@ -102,9 +107,16 @@ func basicFunction(args []string) {
 			func() {},
 			analyzeFunc,
 		)
+		finishRoutines[i] = false
+		for _, routine := range finishRoutines {
+			if routine {
+				return
+			}
+		}
+		close(byteChan)
 	}
 	for i := 0; i < numGo; i++ {
-		go loop()
+		go loop(i)
 	}
 	//Launch writing
 	CyclicWriting(

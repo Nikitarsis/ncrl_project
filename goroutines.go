@@ -74,8 +74,13 @@ func CyclicWriting(
 	for i, name := range fileNames {
 		file, err := os.Open(name)
 		if err != nil {
-			warn(err.Error())
-			continue
+			log(err.Error())
+			var err2 error
+			file, err2 = os.Create(name)
+			if err2 != nil {
+				warn(err.Error())
+				continue
+			}
 		}
 		log(fmt.Sprintf("File %s opened", name))
 		writers[i] = bufio.NewWriter(file)
